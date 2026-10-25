@@ -46,7 +46,9 @@ jobs:
       - name: 编译 recovery
         run: |
           cd twrp
-          rm -rf device/alcatel/k62v1_64_bsp
+          rm -rf device/alcatel
+          echo 'remaining omni trees:'
+          find device -maxdepth 3 -name 'omni_k62v1_64_bsp.mk'
           source build/envsetup.sh
           lunch omni_k62v1_64_bsp-eng
           mka recoveryimage -j8
