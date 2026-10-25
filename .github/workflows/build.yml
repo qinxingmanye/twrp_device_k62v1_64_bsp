@@ -56,6 +56,14 @@ jobs:
           grep inherit device/alps/k62v1_64_bsp/omni_k62v1_64_bsp.mk
           ls -la device/alps/k62v1_64_bsp | head
 
+      - name: 打补丁
+        run: |
+          echo 'TW_DEFAULT_LANGUAGE := zh_CN' >> device/k62v1_64_bsp/BoardConfig.mk
+          echo 'TW_NO_HAPTICS := true' >> device/k62v1_64_bsp/BoardConfig.mk
+          sed -i 's#/sys/class/power_supply/battery#/sys/class/power_supply/mtk-gauge#g' bootable/recovery/twrp.cpp
+          sed -i 's/"tw_brightness_pct", "100"/"tw_brightness_pct", "50"/' bootable/recovery/data.cpp
+          tail -3 device/k62v1_64_bsp/BoardConfig.mk
+          grep -c mtk-gauge bootable/recovery/twrp.cpp
       - name: 编译
         run: |
           cd twrp
