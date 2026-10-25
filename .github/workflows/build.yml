@@ -46,6 +46,7 @@ jobs:
       - name: 编译 recovery
         run: |
           cd twrp
+          rm -rf device/alcatel/k62v1_64_bsp
           source build/envsetup.sh
           lunch omni_k62v1_64_bsp-eng
           mka recoveryimage -j8
