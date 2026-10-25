@@ -1,0 +1,32 @@
+name: fetch-source
+on: workflow_dispatch
+jobs:
+  fetch:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git curl
+      - run: |
+          mkdir -p ~/bin
+          curl -s https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+      - run: |
+          mkdir twrp && cd twrp
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
+          repo sync -j8 --force-sync --no-clone-bundle --no-tags
+      - run: |
+          cd twrp
+          mkdir -p srcpack
+          for p in bootable/recovery/twrp.cpp bootable/recovery/variables.h bootable/recovery/data.cpp bootable/recovery/recovery.cpp bootable/recovery/Android.mk; do
+            [ -f "$p" ] && cp --parents "$p" srcpack/ || true
+          done
+          cp -r --parents bootable/recovery/gui srcpack/ 2>/dev/null || true
+          cp -r --parents bootable/recovery/battery* srcpack/ 2>/dev/null || true
+          tar czf source-files.tgz -C srcpack .
+          ls -lh source-files.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-files
+          path: twrp/source-files.tgz
