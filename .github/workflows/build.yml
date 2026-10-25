@@ -1,0 +1,57 @@
+name: Build TWRP for k62v1_64_bsp
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: 清理磁盘
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo apt-get clean
+          df -h
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev \
+            gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
+            libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig \
+            python3 python-is-python3 ccache
+
+      - name: 安装 repo
+        run: |
+          mkdir -p ~/bin
+          curl -s https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: 同步 TWRP 源码
+        run: |
+          mkdir twrp && cd twrp
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
+          repo sync -j8 --force-sync --no-clone-bundle --no-tags
+          df -h
+
+      - name: 放入设备树
+        run: |
+          cd twrp
+          mkdir -p device/alps
+          curl -L -o dt.zip https://github.com/qinxingmanye/twrp_device_k62v1_64_bsp/raw/main/k62v1_64_bsp.zip
+          unzip -q dt.zip -d device/alps/
+          ls -la device/alps/k62v1_64_bsp | head
+
+      - name: 编译 recovery
+        run: |
+          cd twrp
+          source build/envsetup.sh
+          lunch omni_k62v1_64_bsp-eng
+          mka recoveryimage -j8
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-image
+          path: twrp/out/target/product/k62v1_64_bsp/recovery.img
