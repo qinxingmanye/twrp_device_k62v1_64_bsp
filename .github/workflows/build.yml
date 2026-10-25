@@ -42,6 +42,18 @@ jobs:
           curl -L -o dt.zip https://github.com/qinxingmanye/twrp_device_k62v1_64_bsp/raw/main/k62v1_64_bsp.zip
           unzip -q dt.zip -d device/alps/
           printf 'LOCAL_PATH := device/alps/k62v1_64_bsp\n' > device/alps/k62v1_64_bsp/device.mk
+          echo 'vendor configs:'
+          ls vendor/ 2>/dev/null || true
+          if [ -f vendor/twrp/config/common.mk ]; then cfg=vendor/twrp/config/common.mk
+          elif [ -f vendor/omni/config/common.mk ]; then cfg=vendor/omni/config/common.mk
+          else cfg=""; fi
+          echo "using cfg: $cfg"
+          if [ -n "$cfg" ]; then
+            sed -i "s#vendor/omni/config/common.mk#$cfg#" device/alps/k62v1_64_bsp/omni_k62v1_64_bsp.mk
+          else
+            sed -i '/vendor\/omni\/config\/common.mk/d' device/alps/k62v1_64_bsp/omni_k62v1_64_bsp.mk
+          fi
+          grep inherit device/alps/k62v1_64_bsp/omni_k62v1_64_bsp.mk
           ls -la device/alps/k62v1_64_bsp | head
 
       - name: 编译
