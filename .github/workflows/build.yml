@@ -58,11 +58,14 @@ jobs:
 
       - name: 打补丁
         run: |
-          echo 'TW_DEFAULT_LANGUAGE := zh_CN' >> device/k62v1_64_bsp/BoardConfig.mk
-          echo 'TW_NO_HAPTICS := true' >> device/k62v1_64_bsp/BoardConfig.mk
+          cd twrp
+          BC=$(find device -name BoardConfig.mk | head -1)
+          echo "BoardConfig: $BC"
+          echo 'TW_DEFAULT_LANGUAGE := zh_CN' >> "$BC"
+          echo 'TW_NO_HAPTICS := true' >> "$BC"
+          tail -3 "$BC"
           sed -i 's#/sys/class/power_supply/battery#/sys/class/power_supply/mtk-gauge#g' bootable/recovery/twrp.cpp
           sed -i 's/"tw_brightness_pct", "100"/"tw_brightness_pct", "50"/' bootable/recovery/data.cpp
-          tail -3 device/k62v1_64_bsp/BoardConfig.mk
           grep -c mtk-gauge bootable/recovery/twrp.cpp
       - name: 编译
         run: |
